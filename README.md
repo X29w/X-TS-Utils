@@ -1,8 +1,5 @@
 # @x-industry/x-ts-utils
 
-[![NPM version](https://img.shields.io/npm/v/@x-industry/x-ts-utils.svg?style=flat)](https://npmjs.org/package/@x-industry/x-ts-utils)
-[![NPM downloads](http://img.shields.io/npm/dm/@x-industry/x-ts-utils.svg?style=flat)](https://npmjs.org/package/@x-industry/x-ts-utils)
-
 A TS Utils
 
 ## Usage

@@ -1,18 +1,24 @@
-const catchError = <T, E extends new (message?: string) => Error>(
-  promise: Promise<T>,
-  errorsToCatch?: E[],
-): Promise<[undefined, T] | [InstanceType<E>]> => {
-  return promise
-    .then((data) => [undefined, data] as [undefined, T])
-    .catch((error) => {
-      if (errorsToCatch === undefined) {
-        return [error];
-      }
-      if (errorsToCatch.some((e) => error instanceof e)) {
-        return [error];
-      }
-      throw error;
-    });
+// Types for the result object with discriminated union
+type Success<T> = {
+  data: T;
+  error: null;
 };
 
-export default catchError;
+type Failure<E> = {
+  data: null;
+  error: E;
+};
+
+type Result<T, E = Error> = Success<T> | Failure<E>;
+
+// Main wrapper function
+export async function tryCatch<T, E = Error>(
+  promise: Promise<T>,
+): Promise<Result<T, E>> {
+  try {
+    const data = await promise;
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: error as E };
+  }
+}

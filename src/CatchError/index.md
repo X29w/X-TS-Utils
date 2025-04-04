@@ -1,56 +1,98 @@
-# CatchError
+### `tryCatch`函数的中文说明文档
 
-## 概述
+#### 功能
 
-`catchError` 是一个泛型函数，用于处理 Promise 的错误。它接受一个 Promise 和一个可选的错误类型数组，并在 Promise 被拒绝时捕获特定类型的错误。该函数返回一个 Promise，包含成功或错误的结果。
+`tryCatch` 是一个实用工具函数，用于安全处理异步操作。它以标准化的对象形式封装结果和错误，简化了错误处理。
 
-## 类型参数
+---
 
-- `T`: 表示 Promise 成功解析时返回的值的类型。
-- `E`: 表示要捕获的错误类型的构造函数，必须是 `Error` 的子类。
+#### 类型定义
 
-## 参数
+1. **`Success<T>`**  
+   表示操作成功的结果：
 
-- `promise: Promise<T>`: 需要处理的 Promise 对象。
-- `errorsToCatch?: E[]`: 可选参数，表示要捕获的错误类型数组。如果未提供，则捕获所有错误。
+   ```typescript
+   type Success<T> = {
+     data: T;
+     error: null;
+   };
+   ```
 
-## 返回值
+2. **`Failure<E>`**  
+   表示操作失败的结果：
 
-返回一个 Promise，解析为以下两种情况之一：
+   ```typescript
+   type Failure<E> = {
+     data: null;
+     error: E;
+   };
+   ```
 
-- `[undefined, T]`: 表示 Promise 成功解析，返回成功的数据。
-- `[InstanceType<E>]`: 表示捕获到的错误实例。
+3. **`Result<T, E = Error>`**  
+   成功和失败结果的联合类型：
+   ```typescript
+   type Result<T, E = Error> = Success<T> | Failure<E>;
+   ```
 
-## 使用示例
+---
+
+#### 函数签名
 
 ```typescript
-const myPromise = new Promise((resolve, reject) => {
-  setTimeout(() => reject(new TypeError('发生了类型错误')), 1000);
-});
+export async function tryCatch<T, E = Error>(
+  promise: Promise<T>,
+): Promise<Result<T, E>>;
+```
 
-const handlePromise = async () => {
-  const result = await catchError(myPromise, [TypeError]);
-  if (result[0] === undefined) {
-    console.log('成功:', result[1]);
+---
+
+#### 参数
+
+- **`promise: Promise<T>`**  
+   一个表示异步操作的 `Promise`。
+
+---
+
+#### 返回值
+
+函数返回一个`Promise`，包含以下两种情况：
+
+1. **成功**：
+
+   ```typescript
+   { data: T, error: null }
+   ```
+
+   - `data`：包含`Promise`的解析结果。
+   - `error`：始终为`null`。
+
+2. **失败**：
+   ```typescript
+   { data: null, error: E }
+   ```
+   - `data`：始终为`null`。
+   - `error`：包含捕获到的错误。
+
+---
+
+#### 使用示例
+
+```typescript
+async function fetchData() {
+  const result = await tryCatch(fetch('https://example.com'));
+
+  if (result.error) {
+    console.error('请求失败：', result.error);
   } else {
-    console.error('捕获到错误:', result[0]);
+    console.log('请求成功：', result.data);
   }
-};
-
-handlePromise();
+}
 ```
 
-## 详细说明
+---
 
-1. **Promise 处理**: 函数首先尝试解析传入的 Promise。如果成功，返回一个包含 `undefined` 和成功数据的数组。
-2. **错误捕获**: 如果 Promise 被拒绝，函数会检查 `errorsToCatch` 参数。如果未提供该参数，函数将返回捕获到的错误。如果提供了参数，函数会检查错误是否是指定类型之一。如果是，则返回该错误；否则，抛出错误以供外部处理。
-3. **类型安全**: 该函数利用 TypeScript 的类型系统，确保在处理 Promise 和错误时的类型安全。
+#### 优势
 
-## 注意事项
-
-- 确保传入的 `errorsToCatch` 数组中的构造函数是 `Error` 的子类。
-- 该函数适用于需要对特定错误类型进行处理的场景，提供了灵活的错误管理机制。
-
-```
-
-```
+- **集中错误处理**：减少代码中重复的 `try...catch` 块。
+- **类型安全**：明确的类型保证代码安全性。
+- **可读性强**：简化了异步操作的逻辑处理。
